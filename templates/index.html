@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="navbar">
+    <h2>STUDENT MANAGEMENT SYSTEM</h2>
+    <div>
+        <a href="/">Home</a>
+        <a href="/add">Add Student</a>
+    </div>
+</div>
+
+<div class="container">
+
+<h1>Student Management System</h1>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <p class="success">{{ messages[0] }}</p>
+  {% endif %}
+{% endwith %}
+
+<form action="/search" method="post">
+    <input type="text" name="keyword" placeholder="Search for students">
+    <button>Search</button>
+</form>
+
+<table>
+<tr>
+    <th>ID</th><th>Name</th><th>Roll No</th><th>Class</th><th>Action</th>
+</tr>
+
+{% for s in students %}
+<tr>
+    <td>{{ s[0] }}</td>
+    <td>{{ s[1] }}</td>
+    <td>{{ s[2] }}</td>
+    <td>{{ s[3] }}</td>
+    <td>
+        <a href="/edit/{{ s[0] }}">Edit</a> |
+        <a href="/delete/{{ s[0] }}" onclick="return confirm('Are you sure?')">Delete</a>
+    </td>
+</tr>
+{% endfor %}
+</table>
+
+</div>
+</body>
+</html>
