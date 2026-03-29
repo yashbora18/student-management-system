@@ -4,21 +4,30 @@ import sqlite3
 app = Flask(__name__)
 app.secret_key = "secret"
 
-def get_db():
-    return sqlite3.connect("students.db")
+DB_PATH = "students.db"
 
+# Connect DB
+def get_db():
+    return sqlite3.connect(DB_PATH)
+
+# Create table
 def create_table():
     conn = get_db()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS students (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             roll TEXT,
             class TEXT
         )
     """)
+    conn.commit()
     conn.close()
 
+# 🔥 IMPORTANT: create table when app starts (for Render)
+create_table()
+
+# Home page
 @app.route('/')
 def home():
     conn = get_db()
@@ -26,6 +35,7 @@ def home():
     conn.close()
     return render_template("index.html", students=students)
 
+# Add student
 @app.route('/add', methods=['GET','POST'])
 def add():
     if request.method == 'POST':
@@ -34,7 +44,10 @@ def add():
         clas = request.form['class']
 
         conn = get_db()
-        conn.execute("INSERT INTO students (name, roll, class) VALUES (?, ?, ?)", (name, roll, clas))
+        conn.execute(
+            "INSERT INTO students (name, roll, class) VALUES (?, ?, ?)",
+            (name, roll, clas)
+        )
         conn.commit()
         conn.close()
 
@@ -43,6 +56,7 @@ def add():
 
     return render_template("add.html")
 
+# Delete student
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = get_db()
@@ -51,6 +65,7 @@ def delete(id):
     conn.close()
     return redirect('/')
 
+# Edit student
 @app.route('/edit/<int:id>', methods=['GET','POST'])
 def edit(id):
     conn = get_db()
@@ -60,24 +75,30 @@ def edit(id):
         roll = request.form['roll']
         clas = request.form['class']
 
-        conn.execute("UPDATE students SET name=?, roll=?, class=? WHERE id=?", (name, roll, clas, id))
+        conn.execute(
+            "UPDATE students SET name=?, roll=?, class=? WHERE id=?",
+            (name, roll, clas, id)
+        )
         conn.commit()
         conn.close()
-
         return redirect('/')
 
     student = conn.execute("SELECT * FROM students WHERE id=?", (id,)).fetchone()
     conn.close()
     return render_template("edit.html", student=student)
 
+# Search
 @app.route('/search', methods=['POST'])
 def search():
     keyword = request.form['keyword']
     conn = get_db()
-    students = conn.execute("SELECT * FROM students WHERE name LIKE ?", ('%'+keyword+'%',)).fetchall()
+    students = conn.execute(
+        "SELECT * FROM students WHERE name LIKE ?",
+        ('%' + keyword + '%',)
+    ).fetchall()
     conn.close()
     return render_template("index.html", students=students)
 
+# Run locally
 if __name__ == '__main__':
-    create_table()
     app.run(debug=True)
